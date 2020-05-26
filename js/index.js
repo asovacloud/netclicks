@@ -1,6 +1,7 @@
 // menu
 const leftMenu = document.querySelector('.left-menu');
 const hamburger = document.querySelector('.hamburger');
+const tvCards = document.querySelectorAll('.tv-card');
 
 const init = () => {
 
@@ -10,7 +11,7 @@ const init = () => {
     hamburger.classList.toggle('open');
   })
 
-// close menu when click out menu
+  // close menu when click out menu
   document.addEventListener('click', event => {
     if (!event.target.closest('.left-menu')) {
       leftMenu.classList.remove('openMenu');
@@ -18,7 +19,7 @@ const init = () => {
     }
   });
 
-// open/close dropdown
+  // open/close dropdown
   leftMenu.addEventListener('click', event => {
     event.preventDefault();
     const target = event.target
@@ -29,6 +30,19 @@ const init = () => {
       hamburger.classList.add('open');
     }
   });
+
+  // show/not show backdrop
+  tvCards.forEach(card => {
+    const image = card.querySelector('.tv-card__img');
+    const imgUrl = image.src;
+    const backdrop = image.dataset.backdrop;
+    card.addEventListener('mouseenter', () => {
+      if (backdrop) image.src = backdrop;
+    });
+    card.addEventListener('mouseleave', () => {
+      if (backdrop) image.src = imgUrl;
+    });
+  })
 
 };
 
