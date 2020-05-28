@@ -798,7 +798,6 @@ main {
     --skin-color: #e4c560;
     --tap-speed: 0.6s;
     --tap-stagger: 0.1s;
-    position: relative;
     width: 8vw;
     height: 6vw;
     position: absolute;

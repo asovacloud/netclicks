@@ -1,14 +1,31 @@
 // constants
 const IMG_URL = 'https://image.tmdb.org/t/p/w185_and_h278_bestv2'
-const KEY = '2339870f2ea941471f42b64ca4e3bed3';
 
 // variables
 const leftMenu = document.querySelector('.left-menu');
 const hamburger = document.querySelector('.hamburger');
 const tvShowList = document.querySelector('.tv-shows__list');
 const modal = document.querySelector('.modal');
+const tvShows = document.querySelector('.tv-shows');
+const tvCardImg = document.querySelector('.tv-card__img');
+const modalTitle = document.querySelector('.modal__title');
+const genresList = document.querySelector('.genres-list');
+const rating = document.querySelector('.rating');
+const description = document.querySelector('.description');
+const modalLink = document.querySelector('.modal__link');
+const searchForm = document.querySelector('.search__form');
+const searchFormInput = document.querySelector('.search__form-input');
+const preloader = document.querySelector('.preloader');
+
+const loading = document.createElement('div');
+loading.className = 'loading';
 
 const DBService = class {
+  constructor() {
+    this.API_KEY = '2339870f2ea941471f42b64ca4e3bed3';
+    this.SERVER = 'https://api.themoviedb.org/3'
+  }
+
   getData = async url => {
     const res = await fetch(url);
     if (res.ok) {
@@ -16,18 +33,25 @@ const DBService = class {
     } else {
       throw new Error(`Can't get a date on the link ${ url }`);
     }
-
   }
 
-  getTestData = () => {
-    return this.getData('test.json')
-  }
+  getTestData = () => this.getData('test.json');
+  getTestCard = () => this.getData('card.json')
+
+  getSearchResult = query => this
+    .getData(`${ this.SERVER }/search/tv?api_key=${ this.API_KEY }&query=${ query }&language=en-US`);
+
+  getTvShow = id => this.getData(`${ this.SERVER }/tv/${ id }?api_key=${ this.API_KEY }&language=en-US`);
+
 }
 
 const renderCard = response => {
-  console.log("response", response);
 
-  tvShowList.textContent = '';;
+  if (response.results.length === 0) {
+    loading.remove();
+    return;
+  };
+  tvShowList.textContent = '';
   response.results.forEach(({
       id,
       poster_path: poster,
@@ -36,9 +60,10 @@ const renderCard = response => {
       vote_average: vote,
     }) => {
 
+    if (!poster) return;
     const posterIMG = poster ? IMG_URL + poster : 'img/no-poster.jpg';
-    const backdropIMG = backdrop ? IMG_URL + backdrop : 'img/no-poster.jpg';
-    const voteElem = vote !== 0 ? `<span class="tv-card__vote">${ vote }</span>` : '';
+    const backdropIMG = backdrop ? IMG_URL + backdrop : '';
+    const voteElem = vote ? `<span class="tv-card__vote">${ vote }</span>` : '';
     
     const card = document.createElement('li')
     card.className = 'tv-shows__item';
@@ -46,7 +71,7 @@ const renderCard = response => {
       <a
         href="#"
         class="tv-card"
-        key=${ id }
+        id=${ id }
       >
         ${ voteElem }
         <img class="tv-card__img"
@@ -56,15 +81,23 @@ const renderCard = response => {
         <h4 class="tv-card__head">${ title }</h4>
       </a>
     `;
+    loading.remove();
     tvShowList.append(card);
-    console.log(card);
-
   })
 }
 
-new DBService()
-  .getTestData()
-  .then(renderCard);
+
+searchForm.addEventListener('submit', event => {
+
+  event.preventDefault();
+  const value = searchFormInput.value.trim();
+  searchFormInput.value = '';
+  if (value) {
+    tvShows.append(loading);
+    new DBService().getSearchResult(value).then(renderCard);
+  }
+
+});
 
 // functions 
 const changeImage = event => {
@@ -109,11 +142,37 @@ const init = () => {
   // open modal window
   tvShowList.addEventListener('click', event => {
     event.preventDefault();
+    preloader.style.display = 'block';
     const target = event.target;
     const card = target.closest('.tv-card');
     if(card) {
-      document.body.style.overflow = 'hidden';
-      modal.classList.remove('hide');
+      new DBService()
+        .getTvShow(card.id)
+        .then(({
+          poster_path: poster,
+          name: title,
+          genres,
+          vote_average: vote,
+          overview,
+          homepage: url,
+        }) => {
+          tvCardImg.src = IMG_URL + poster;
+          tvCardImg.alt = title;
+          modalTitle.textContent = title;
+
+          genresList.textContent = '';
+          for (const item of genres) {
+            genresList.innerHTML += `<li>${ item.name }</li>`;
+          }
+          description.textContent = overview;
+          rating.textContent = vote;
+          modalLink.href = url;
+        })
+        .then(() => {
+          preloader.style.display = '';
+          document.body.style.overflow = 'hidden';
+          modal.classList.remove('hide');
+        });
     }
   });
 
