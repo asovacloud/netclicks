@@ -1201,8 +1201,9 @@ div:after {
     list-style: none;
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .pagination li {
-    padding: 15px;
+    padding: 6px 5px;
 }
